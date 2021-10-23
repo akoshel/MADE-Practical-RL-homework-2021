@@ -1,6 +1,7 @@
 from gym import make
 import numpy as np
 import torch
+from network import Model
 from torch import nn
 from torch.nn import functional as F
 from torch.optim import Adam
@@ -20,7 +21,7 @@ LEARNING_RATE = 5e-4
 class DQN:
     def __init__(self, state_dim, action_dim):
         self.steps = 0 # Do not change
-        self.model = None # Torch model
+        self.model = Model() # Torch model
 
     def consume_transition(self, transition):
         # Add transition to a replay buffer.
