@@ -72,7 +72,7 @@ class DQN:
 
     def act(self, state, target=False):
         # Compute an action. Do not forget to turn state to a Tensor and then turn an action to a numpy array.
-        res = self.model(torch.FloatTensor(state))
+        res = self.model(torch.FloatTensor(state).to(self.device))
         return res.argmax().item()
 
     def update(self, transition):
