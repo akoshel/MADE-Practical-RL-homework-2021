@@ -19,8 +19,8 @@ INITIAL_STEPS = 1024
 TRANSITIONS = 500000
 STEPS_PER_UPDATE = 4
 STEPS_PER_TARGET_UPDATE = STEPS_PER_UPDATE * 1000
-BATCH_SIZE = 128
-LEARNING_RATE = 1e-4
+BATCH_SIZE = 256
+LEARNING_RATE = 5e-4
 
 
 class DQN:
@@ -108,7 +108,7 @@ def evaluate_policy(agent, episodes=5):
 if __name__ == "__main__":
     env = make("LunarLander-v2")
     dqn = DQN(state_dim=env.observation_space.shape[0], action_dim=env.action_space.n)
-    eps = 0.05
+    eps = 0.1
     state = env.reset()
 
     for _ in range(INITIAL_STEPS):
