@@ -4,15 +4,15 @@ import torch.nn as nn
 
 class Model(nn.Module):
 
-    def __init__(self) -> None:
+    def __init__(self, state_dim, action_dim) -> None:
         super(Model, self).__init__()
-        self.linear1 = nn.Linear(8, 16)
+        self.linear1 = nn.Linear(state_dim, state_dim * 2)
         self.sigm1 = nn.Sigmoid()
-        self.linear2 = nn.Linear(16, 16)
+        self.linear2 = nn.Linear(state_dim * 2, state_dim * 4)
         self.sigm2 = nn.Sigmoid()
-        self.linear3 = nn.Linear(16, 16)
+        self.linear3 = nn.Linear(state_dim * 4, state_dim * 2)
         self.sigm3 = nn.Sigmoid()
-        self.linear4 = nn.Linear(16, 4)
+        self.linear4 = nn.Linear(state_dim * 2, action_dim)
 
     def forward(self, batch: torch.Tensor) -> torch.Tensor:
         input_batch = batch
