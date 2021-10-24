@@ -5,11 +5,31 @@ from random import sample
 
 import numpy as np
 import torch
+import torch.nn as nn
 from gym import make
 from torch.nn import functional as F
 from torch.optim import Adam
 
-from network import Model
+
+class Model(nn.Module):
+
+    def __init__(self, state_dim, action_dim) -> None:
+        super(Model, self).__init__()
+        self.linear1 = nn.Linear(state_dim, 512)
+        self.sigm1 = nn.ReLU()
+        self.linear2 = nn.Linear(512, 256)
+        self.sigm2 = nn.ReLU()
+        self.linear3 = nn.Linear(256, action_dim)
+
+    def forward(self, batch: torch.Tensor) -> torch.Tensor:
+        input_batch = batch
+        input_batch = self.linear1(input_batch)
+        input_batch = self.sigm1(input_batch)
+        input_batch = self.linear2(input_batch)
+        input_batch = self.sigm2(input_batch)
+        result = self.linear3(input_batch)
+        return result
+
 
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward', 'done'))
@@ -58,13 +78,13 @@ class DQN:
         next_state_values = torch.Tensor(batch.next_state).to(self.device)
         state_action_values = self.model(state_batch).gather(1, action_batch.long())
 
-        expected_state_action_values = (self.target(next_state_values).max(1)[0].detach().unsqueeze(1) * GAMMA) + reward_batch
+        expected_state_action_values = (self.target(next_state_values).max(1)[0].detach().unsqueeze(
+            1) * GAMMA) + reward_batch
 
         loss = F.mse_loss(state_action_values, expected_state_action_values)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
 
     def update_target_network(self):
         # Update weights of a target Q-network here. You may use copy.deepcopy to do this or 
