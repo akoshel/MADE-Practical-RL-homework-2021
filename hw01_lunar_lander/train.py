@@ -59,7 +59,7 @@ class DQN:
 
         expected_state_action_values = (self.target(next_state_values).max(1)[0].detach().unsqueeze(1) * GAMMA) + reward_batch
 
-        loss = F.smooth_l1_loss(state_action_values, expected_state_action_values)
+        loss = F.mse_loss(state_action_values, expected_state_action_values)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
