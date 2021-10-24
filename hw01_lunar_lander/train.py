@@ -29,7 +29,8 @@ class DQN:
         print(self.device)
         self.steps = 0  # Do not change
         self.model = Model(state_dim, action_dim).to(self.device)  # Torch model
-        self.target = deepcopy(self.model).to(self.device)  # Torch model
+        self.target = Model(state_dim, action_dim).to(self.device)
+        self.target.load_state_dict(deepcopy(self.model.state_dict()))  # Torch model
         self.optimizer = Adam(self.model.parameters(), lr=LEARNING_RATE)
         self.memory = deque(maxlen=30000)
         self.batch_size = BATCH_SIZE
@@ -68,7 +69,7 @@ class DQN:
     def update_target_network(self):
         # Update weights of a target Q-network here. You may use copy.deepcopy to do this or 
         # assign a values of network parameters via PyTorch methods.
-        self.target = deepcopy(self.model)
+        self.target.load_state_dict(deepcopy(self.model.state_dict()))
 
     def act(self, state, target=False):
         # Compute an action. Do not forget to turn state to a Tensor and then turn an action to a numpy array.
