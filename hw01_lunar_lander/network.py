@@ -7,13 +7,13 @@ class Model(nn.Module):
     def __init__(self, state_dim, action_dim) -> None:
         super(Model, self).__init__()
         self.linear1 = nn.Linear(state_dim, 512)
-        self.sigm1 = nn.Sigmoid()
+        self.sigm1 = nn.ReLU()
         self.linear2 = nn.Linear(512, 256)
         self.sigm2 = nn.Sigmoid()
         self.linear3 = nn.Linear(256, 128)
-        self.sigm3 = nn.Sigmoid()
+        self.sigm3 = nn.ReLU()
         self.linear4 = nn.Linear(128, 64)
-        self.sigm4 = nn.Sigmoid()
+        self.sigm4 = nn.ReLU()
         self.linear5 = nn.Linear(64, action_dim)
 
     def forward(self, batch: torch.Tensor) -> torch.Tensor:
