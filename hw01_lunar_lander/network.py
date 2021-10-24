@@ -6,15 +6,15 @@ class Model(nn.Module):
 
     def __init__(self, state_dim, action_dim) -> None:
         super(Model, self).__init__()
-        self.linear1 = nn.Linear(state_dim, state_dim * 2)
+        self.linear1 = nn.Linear(state_dim, 512)
         self.sigm1 = nn.Sigmoid()
-        self.linear2 = nn.Linear(state_dim * 2, state_dim * 4)
+        self.linear2 = nn.Linear(512, 256)
         self.sigm2 = nn.Sigmoid()
-        self.linear3 = nn.Linear(state_dim * 4, state_dim * 8)
+        self.linear3 = nn.Linear(256, 128)
         self.sigm3 = nn.Sigmoid()
-        self.linear4 = nn.Linear(state_dim * 8, state_dim * 4)
+        self.linear4 = nn.Linear(128, 64)
         self.sigm4 = nn.Sigmoid()
-        self.linear5 = nn.Linear(state_dim * 4, action_dim)
+        self.linear5 = nn.Linear(64, action_dim)
 
     def forward(self, batch: torch.Tensor) -> torch.Tensor:
         input_batch = batch

@@ -20,7 +20,7 @@ TRANSITIONS = 500000
 STEPS_PER_UPDATE = 4
 STEPS_PER_TARGET_UPDATE = STEPS_PER_UPDATE * 1000
 BATCH_SIZE = 128
-LEARNING_RATE = 5e-4
+LEARNING_RATE = 0.001#5e-4
 
 
 class DQN:
@@ -32,7 +32,7 @@ class DQN:
         self.target = Model(state_dim, action_dim).to(self.device)
         self.target.load_state_dict(deepcopy(self.model.state_dict()))  # Torch model
         self.optimizer = Adam(self.model.parameters(), lr=LEARNING_RATE)
-        self.memory = deque(maxlen=30000)
+        self.memory = deque(maxlen=500000)
         self.batch_size = BATCH_SIZE
 
     def consume_transition(self, transition) -> None:
