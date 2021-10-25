@@ -35,12 +35,12 @@ Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward', 'done'))
 
 GAMMA = 0.99
-INITIAL_STEPS = 1024
-TRANSITIONS = 500000
+INITIAL_STEPS = 2048
+TRANSITIONS = 700000
 STEPS_PER_UPDATE = 4
 STEPS_PER_TARGET_UPDATE = STEPS_PER_UPDATE * 1000
 BATCH_SIZE = 256
-LEARNING_RATE = 5e-4
+LEARNING_RATE = 3e-4
 
 
 class DQN:
