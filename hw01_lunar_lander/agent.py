@@ -13,3 +13,7 @@ class Agent:
         res = self.model(torch.FloatTensor(state).to(self.device))
         return res.argmax().item()
 
+
+if __name__ == "__main__":
+    agent = Agent()
+    print("here")

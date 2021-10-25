@@ -10,7 +10,6 @@ from gym import make
 from torch.nn import functional as F
 from torch.optim import Adam
 
-
 class Model(nn.Module):
 
     def __init__(self, state_dim, action_dim) -> None:
@@ -48,8 +47,22 @@ class DQN:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(self.device)
         self.steps = 0  # Do not change
-        self.model = Model(state_dim, action_dim).to(self.device)  # Torch model
-        self.target = Model(state_dim, action_dim).to(self.device)
+        self.model = nn.Sequential(
+            nn.Linear(state_dim, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, action_dim),
+        )
+        self.target = nn.Sequential(
+            nn.Linear(state_dim, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, action_dim),
+        )
+        # self.model = Model(state_dim, action_dim).to(self.device)  # Torch model
+        # self.target = Model(state_dim, action_dim).to(self.device)
         self.target.load_state_dict(deepcopy(self.model.state_dict()))  # Torch model
         self.optimizer = Adam(self.model.parameters(), lr=LEARNING_RATE)
         self.memory = deque(maxlen=500000)
