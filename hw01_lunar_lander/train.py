@@ -53,14 +53,14 @@ class DQN:
             nn.Linear(512, 256),
             nn.ReLU(),
             nn.Linear(256, action_dim),
-        )
+        ).to(self.device)
         self.target = nn.Sequential(
             nn.Linear(state_dim, 512),
             nn.ReLU(),
             nn.Linear(512, 256),
             nn.ReLU(),
             nn.Linear(256, action_dim),
-        )
+        ).to(self.device)
         # self.model = Model(state_dim, action_dim).to(self.device)  # Torch model
         # self.target = Model(state_dim, action_dim).to(self.device)
         self.target.load_state_dict(deepcopy(self.model.state_dict()))  # Torch model
