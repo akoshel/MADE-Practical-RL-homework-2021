@@ -73,7 +73,7 @@ class Actor(nn.Module):
         # Remember: agent is not deterministic, sample actions from distribution (e.g. Gaussian)
         distrib = self.get_action_distribution(state)
         non_tanh_action = distrib.sample()
-        action = F.tanh(non_tanh_action)
+        action = torch.tanh(non_tanh_action)
         return action, non_tanh_action, distrib
 
 
