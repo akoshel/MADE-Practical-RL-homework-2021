@@ -45,7 +45,7 @@ def compute_lambda_returns_and_gae(trajectory):
 
 
 class Actor(nn.Module):
-    def __init__(self, state_size, action_dim, hidden_size):
+    def __init__(self, state_size, action_dim, hidden_size, device):
         super().__init__()
         # Advice: use same log_sigma for all states to improve stability
         # You can do this by defining log_sigma as nn.Parameter(torch.zeros(...))
@@ -56,7 +56,7 @@ class Actor(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, action_dim),
         )
-        self.sigma = torch.full((action_dim,), 0.6 * 0.6)
+        self.sigma = torch.full((action_dim,), 0.6 * 0.6).to(device)
 
     def compute_proba(self, state, action):
         # Returns probability of action according to current policy and distribution of actions
@@ -67,8 +67,8 @@ class Actor(nn.Module):
     def act(self, state):
         # Returns an action (with tanh), not-transformed action (without tanh) and distribution of non-transformed actions
         # Remember: agent is not deterministic, sample actions from distribution (e.g. Gaussian)
-        action_mean = self.model(state.to(self.device))
-        dist = Normal(action_mean, self.sigma)
+        action_mean = self.model(state)
+        dist = Normal(action_mean, self.sigma).to()
         action = dist.sample()
         action_tanh = torch.tanh(action)
         return action_tanh, action, dist
@@ -93,7 +93,7 @@ class PPO:
     def __init__(self, state_dim, action_dim):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(self.device)
-        self.actor = Actor(state_dim, action_dim, 512).to(self.device)
+        self.actor = Actor(state_dim, action_dim, 512, self.device).to(self.device)
         self.critic = Critic(state_dim).to(self.device)
         self.actor_optim = Adam(self.actor.parameters(), ACTOR_LR)
         self.critic_optim = Adam(self.critic.parameters(), CRITIC_LR)
