@@ -95,6 +95,7 @@ class Critic(nn.Module):
 class PPO:
     def __init__(self, state_dim, action_dim):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        print(self.device)
         self.actor = Actor(state_dim, action_dim, 512).to(self.device)
         self.critic = Critic(state_dim).to(self.device)
         self.actor_optim = Adam(self.actor.parameters(), ACTOR_LR)
