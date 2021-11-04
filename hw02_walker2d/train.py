@@ -54,27 +54,24 @@ class Actor(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, 2 * action_dim),
+            nn.Linear(hidden_size, action_dim),
         )
-        self.sigma = None
+        self.sigma = torch.full((action_dim,), 0.6 * 0.6)
 
-    def get_action_distribution(self, state):
-        mu, log_sigma = torch.chunk(self.model(state), 2, dim=-1)
-        sigma = torch.exp(log_sigma)
-        return Normal(mu, sigma)
-
-    def get_logprob(self, state, action):
+    def compute_proba(self, state, action):
         # Returns probability of action according to current policy and distribution of actions
-        distrib = self.get_action_distribution(state)
-        return distrib.log_prob(action).sum(-1)
+        action_mean = self.model(state)
+        dist = Normal(action_mean, self.sigma)
+        return dist.log_prob(action).sum(-1)
 
     def act(self, state):
         # Returns an action (with tanh), not-transformed action (without tanh) and distribution of non-transformed actions
         # Remember: agent is not deterministic, sample actions from distribution (e.g. Gaussian)
-        distrib = self.get_action_distribution(state)
-        non_tanh_action = distrib.sample()
-        action = torch.tanh(non_tanh_action)
-        return action, non_tanh_action, distrib
+        action_mean = self.model(state)
+        dist = Normal(action_mean, self.sigma)
+        action = dist.sample()
+        action_tanh = torch.tanh(action)
+        return action_tanh, action, dist
 
 
 class Critic(nn.Module):
@@ -116,10 +113,11 @@ class PPO:
             idx = np.random.randint(0, len(transitions), BATCH_SIZE)  # Choose random batch
             s = torch.tensor(state[idx]).float().to(self.device)
             a = torch.tensor(action[idx]).float().to(self.device)
-            op = torch.tensor(old_prob[idx]).float().to(self.device)  # Probability of the action in state s.t. old policy
+            op = torch.tensor(old_prob[idx]).float().to(
+                self.device)  # Probability of the action in state s.t. old policy
             v = torch.tensor(target_value[idx]).float().to(self.device)  # Estimated by lambda-returns
             adv = torch.tensor(advantage[idx]).float().to(self.device)  # Estimated by generalized advantage estimation
-            ratios = torch.exp(self.actor.get_logprob(s, a) - op)
+            ratios = torch.exp(self.actor.compute_proba(s, a) - op)
             surr1 = ratios * adv
             surr2 = torch.clamp(ratios, 1 - self.clip, 1 + self.clip) * adv
             actor_loss = (-torch.min(surr1, surr2)).mean()
