@@ -67,7 +67,7 @@ class Actor(nn.Module):
     def act(self, state):
         # Returns an action (with tanh), not-transformed action (without tanh) and distribution of non-transformed actions
         # Remember: agent is not deterministic, sample actions from distribution (e.g. Gaussian)
-        action_mean = self.model(state)
+        action_mean = self.model(state.to(self.device))
         dist = Normal(action_mean, self.sigma)
         action = dist.sample()
         action_tanh = torch.tanh(action)
