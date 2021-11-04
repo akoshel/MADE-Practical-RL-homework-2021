@@ -59,7 +59,7 @@ class Actor(nn.Module):
         self.sigma = None
 
     def get_action_distribution(self, state):
-        mu, log_sigma = torch.chunk(self.model(state.to(self.device)), 2, dim=-1)
+        mu, log_sigma = torch.chunk(self.model(state), 2, dim=-1)
         sigma = torch.exp(log_sigma)
         return Normal(mu, sigma)
 
