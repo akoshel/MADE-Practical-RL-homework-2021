@@ -14,13 +14,13 @@ ENV_NAME = "Walker2DBulletEnv-v0"
 LAMBDA = 0.95
 GAMMA = 0.99
 
-ACTOR_LR = 2e-4
+ACTOR_LR = 1e-3
 CRITIC_LR = 1e-4
 
 CLIP = 0.2
 ENTROPY_COEF = 1e-2
 BATCHES_PER_UPDATE = 64
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 
 MIN_TRANSITIONS_PER_UPDATE = 2048
 MIN_EPISODES_PER_UPDATE = 4
@@ -54,9 +54,9 @@ class Actor(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size // 2),
+            nn.Linear(hidden_size, hidden_size / 2),
             nn.ReLU(),
-            nn.Linear(hidden_size // 2, 2 * action_dim),
+            nn.Linear(hidden_size / 2, 2 * action_dim),
         )
         self.sigma = None
 
@@ -102,7 +102,7 @@ class PPO:
         self.critic = Critic(state_dim).to(self.device)
         self.actor_optim = Adam(self.actor.parameters(), ACTOR_LR)
         self.critic_optim = Adam(self.critic.parameters(), CRITIC_LR)
-        self.clip = 0.2
+        self.clip = CLIP
 
     def update(self, trajectories):
         transitions = [t for traj in trajectories for t in traj]  # Turn a list of trajectories into list of transitions
