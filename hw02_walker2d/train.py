@@ -14,13 +14,13 @@ ENV_NAME = "Walker2DBulletEnv-v0"
 LAMBDA = 0.95
 GAMMA = 0.99
 
-ACTOR_LR = 1e-3
+ACTOR_LR = 2e-4
 CRITIC_LR = 1e-4
 
 CLIP = 0.2
 ENTROPY_COEF = 1e-2
 BATCHES_PER_UPDATE = 64
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 
 MIN_TRANSITIONS_PER_UPDATE = 2048
 MIN_EPISODES_PER_UPDATE = 4
@@ -54,9 +54,7 @@ class Actor(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, int(hidden_size / 2)),
-            nn.ReLU(),
-            nn.Linear(int(hidden_size / 2), 2 * action_dim),
+            nn.Linear(hidden_size, 2 * action_dim),
         )
         self.sigma = None
 
@@ -74,9 +72,9 @@ class Actor(nn.Module):
         # Returns an action (with tanh), not-transformed action (without tanh) and distribution of non-transformed actions
         # Remember: agent is not deterministic, sample actions from distribution (e.g. Gaussian)
         distrib = self.get_action_distribution(state)
-        action = distrib.sample()
-        log_prob = distrib.log_prob(action)
-        return action, log_prob, distrib
+        non_tanh_action = distrib.sample()
+        action = F.tanh(non_tanh_action)
+        return action, non_tanh_action, distrib
 
 
 class Critic(nn.Module):
@@ -98,7 +96,7 @@ class PPO:
     def __init__(self, state_dim, action_dim):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(self.device)
-        self.actor = Actor(state_dim, action_dim, 1024).to(self.device)
+        self.actor = Actor(state_dim, action_dim, 512).to(self.device)
         self.critic = Critic(state_dim).to(self.device)
         self.actor_optim = Adam(self.actor.parameters(), ACTOR_LR)
         self.critic_optim = Adam(self.critic.parameters(), CRITIC_LR)
