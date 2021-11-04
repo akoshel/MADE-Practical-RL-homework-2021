@@ -59,7 +59,7 @@ class Actor(nn.Module):
         self.sigma = None
 
     def get_action_distribution(self, state):
-        mu, log_sigma = torch.chunk(self.model(state), 2, dim=-1)
+        mu, log_sigma = torch.chunk(self.model(state.to(self.device)), 2, dim=-1)
         sigma = torch.exp(log_sigma)
         return Normal(mu, sigma)
 
@@ -94,8 +94,9 @@ class Critic(nn.Module):
 
 class PPO:
     def __init__(self, state_dim, action_dim):
-        self.actor = Actor(state_dim, action_dim, 512)
-        self.critic = Critic(state_dim)
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.actor = Actor(state_dim, action_dim, 512).to(self.device)
+        self.critic = Critic(state_dim).to(self.device)
         self.actor_optim = Adam(self.actor.parameters(), ACTOR_LR)
         self.critic_optim = Adam(self.critic.parameters(), CRITIC_LR)
         self.clip = 0.2
@@ -112,11 +113,11 @@ class PPO:
 
         for _ in range(BATCHES_PER_UPDATE):
             idx = np.random.randint(0, len(transitions), BATCH_SIZE)  # Choose random batch
-            s = torch.tensor(state[idx]).float()
-            a = torch.tensor(action[idx]).float()
-            op = torch.tensor(old_prob[idx]).float()  # Probability of the action in state s.t. old policy
-            v = torch.tensor(target_value[idx]).float()  # Estimated by lambda-returns
-            adv = torch.tensor(advantage[idx]).float()  # Estimated by generalized advantage estimation
+            s = torch.tensor(state[idx]).float().to(self.device)
+            a = torch.tensor(action[idx]).float().to(self.device)
+            op = torch.tensor(old_prob[idx]).float().to(self.device)  # Probability of the action in state s.t. old policy
+            v = torch.tensor(target_value[idx]).float().to(self.device)  # Estimated by lambda-returns
+            adv = torch.tensor(advantage[idx]).float().to(self.device)  # Estimated by generalized advantage estimation
             ratios = torch.exp(self.actor.get_logprob(s, a) - op)
             surr1 = ratios * adv
             surr2 = torch.clamp(ratios, 1 - self.clip, 1 + self.clip) * adv
