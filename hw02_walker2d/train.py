@@ -134,7 +134,7 @@ class PPO:
 
     def get_value(self, state):
         with torch.no_grad():
-            state = torch.tensor(np.array([state])).float()
+            state = torch.tensor(np.array([state])).float().to(self.device)
             value = self.critic.get_value(state)
         return value.cpu().item()
 
