@@ -56,7 +56,7 @@ class Actor(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, action_dim),
         )
-        self.sigma = torch.full((action_dim,), 0.6 * 0.6).to(device)
+        self.sigma = torch.full((action_dim,), 0.3 * 0.3).to(device)
 
     def compute_proba(self, state, action):
         # Returns probability of action according to current policy and distribution of actions
