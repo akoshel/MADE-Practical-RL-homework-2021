@@ -49,6 +49,7 @@ class Actor(nn.Module):
         super().__init__()
         # Advice: use same log_sigma for all states to improve stability
         # You can do this by defining log_sigma as nn.Parameter(torch.zeros(...))
+        self.device = device
         self.model = nn.Sequential(
             nn.Linear(state_size, hidden_size),
             nn.ReLU(),
@@ -56,8 +57,8 @@ class Actor(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, action_dim),
         )
-        self.sigma = torch.full((action_dim,), 0.4 * 0.4).to(device)
-
+        self.sigma = torch.full((action_dim,), 0.5 * 0.5).to(device)
+        # self.sigma = nn.Parameter(torch.zeros(action_dim)).to(device)
     def compute_proba(self, state, action):
         # Returns probability of action according to current policy and distribution of actions
         action_mean = self.model(state)
@@ -68,7 +69,9 @@ class Actor(nn.Module):
         # Returns an action (with tanh), not-transformed action (without tanh) and distribution of non-transformed actions
         # Remember: agent is not deterministic, sample actions from distribution (e.g. Gaussian)
         action_mean = self.model(state)
-        dist = Normal(action_mean, self.sigma)
+        action_var = self.sigma.expand_as(action_mean)
+        # cov_mat = torch.diag_embed(action_var).to(self.device)
+        dist = Normal(action_mean, action_var)
         action = dist.sample()
         action_tanh = torch.tanh(action)
         return action_tanh, action, dist
