@@ -55,23 +55,24 @@ class Actor(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, action_dim),
+            nn.Linear(hidden_size, 2 * action_dim)
         )
-        self.sigma = torch.full((action_dim,), 0.5 * 0.5).to(device)
-        # self.sigma = nn.Parameter(torch.zeros(action_dim)).to(device)
+        # self.sigma = nn.Parameter(torch.tensor([[0.0]])).to(device)
+        self.sigma = torch.full((action_dim,), 0.01 * 0.01).to(device)
+        # self.sigma = torch.zeros(action_dim).to(device)
+
     def compute_proba(self, state, action):
         # Returns probability of action according to current policy and distribution of actions
-        action_mean = self.model(state)
-        dist = Normal(action_mean, self.sigma)
+        mu, log_sigma = torch.chunk(self.model(state), 2, dim=-1)
+        sigma = torch.exp(log_sigma)
+        dist = Normal(mu, sigma)
         return dist.log_prob(action).sum(-1)
 
     def act(self, state):
         # Returns an action (with tanh), not-transformed action (without tanh) and distribution of non-transformed actions
         # Remember: agent is not deterministic, sample actions from distribution (e.g. Gaussian)
-        action_mean = self.model(state)
-        action_var = self.sigma.expand_as(action_mean)
-        # cov_mat = torch.diag_embed(action_var).to(self.device)
-        dist = Normal(action_mean, action_var)
+        action_mean, action_var_log = torch.chunk(self.model(state), 2, dim=-1)
+        dist = Normal(action_mean, self.sigma)
         action = dist.sample()
         action_tanh = torch.tanh(action)
         return action_tanh, action, dist
@@ -96,7 +97,7 @@ class PPO:
     def __init__(self, state_dim, action_dim):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(self.device)
-        self.actor = Actor(state_dim, action_dim, 512, self.device).to(self.device)
+        self.actor = Actor(state_dim, action_dim, 256, self.device).to(self.device)
         self.critic = Critic(state_dim).to(self.device)
         self.actor_optim = Adam(self.actor.parameters(), ACTOR_LR)
         self.critic_optim = Adam(self.critic.parameters(), CRITIC_LR)
