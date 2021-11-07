@@ -66,7 +66,7 @@ class Actor(nn.Module):
         mu, log_sigma = torch.chunk(self.model(state), 2, dim=-1)
         sigma = torch.exp(log_sigma)
         dist = Normal(mu, sigma)
-        return dist.plog_prob(action).sum(-1)
+        return dist.log_prob(action).sum(-1)
 
     def act(self, state):
         # Returns an action (with tanh), not-transformed action (without tanh) and distribution of non-transformed actions
