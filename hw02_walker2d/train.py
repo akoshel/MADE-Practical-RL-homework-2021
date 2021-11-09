@@ -130,7 +130,7 @@ class PPO:
             self.actor_optim.zero_grad()
             self.critic_optim.zero_grad()
             total_loss = actor_loss + critic_loss + ENTROPY_COEF * distr.entropy()
-            total_loss.backward()
+            total_loss.backward(retain_graph=True)
             self.actor_optim.step()
             self.critic_optim.step()
 
