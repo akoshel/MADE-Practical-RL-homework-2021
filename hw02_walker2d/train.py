@@ -129,8 +129,8 @@ class PPO:
             critic_loss = F.smooth_l1_loss(self.critic.get_value(s).flatten(), v)
             self.actor_optim.zero_grad()
             self.critic_optim.zero_grad()
-            total_loss = actor_loss + critic_loss + ENTROPY_COEF * distr.entropy()
-            total_loss.backward(retain_graph=True)
+            total_loss = actor_loss + critic_loss + ENTROPY_COEF * distr.entropy().mean()
+            total_loss.backward()
             self.actor_optim.step()
             self.critic_optim.step()
 
