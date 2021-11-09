@@ -1,11 +1,13 @@
+import pybullet_envs
 # Don't forget to install PyBullet!
+from gym import make
 import numpy as np
 import torch
-from gym import make
 from torch import nn
 from torch.distributions import Normal
 from torch.nn import functional as F
 from torch.optim import Adam
+import random
 
 ENV_NAME = "Walker2DBulletEnv-v0"
 
