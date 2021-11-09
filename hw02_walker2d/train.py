@@ -55,28 +55,27 @@ class Actor(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, 2 * action_dim)
+            nn.Linear(hidden_size, action_dim)
         )
-        # self.sigma = nn.Parameter(torch.tensor([[0.0]])).to(device)
-        self.sigma = torch.full((action_dim,), 0.1 * 0.1).to(device)
-        # self.sigma = torch.zeros(action_dim).to(device)
+        self.sigma = nn.Parameter(torch.zeros(action_dim)).to(device)
 
     def compute_proba(self, state, action):
         # Returns probability of action according to current policy and distribution of actions
-        mu, log_sigma = torch.chunk(self.model(state), 2, dim=-1)
-        sigma = torch.exp(log_sigma)
+        mu =  self.model(state)
+        sigma = torch.exp(self.sigma)
         distr = Normal(mu, sigma)
         prob = torch.exp(distr.log_prob(action).sum(-1))
-        return prob
+        return prob, distr
 
     def act(self, state):
         # Returns an action (with tanh), not-transformed action (without tanh) and distribution of non-transformed actions
         # Remember: agent is not deterministic, sample actions from distribution (e.g. Gaussian)
-        action_mean, action_var_log = torch.chunk(self.model(state), 2, dim=-1)
-        dist = Normal(action_mean, self.sigma)
-        action = dist.sample()
+        mu = self.model(state)
+        sigma = torch.exp(self.sigma)
+        distr = Normal(mu, sigma)
+        action = distr.sample()
         action_tanh = torch.tanh(action)
-        return action_tanh, action, dist
+        return action_tanh, action, distr
 
 
 class Critic(nn.Module):
@@ -122,18 +121,17 @@ class PPO:
                 self.device)  # Probability of the action in state s.t. old policy
             v = torch.tensor(target_value[idx]).float().to(self.device)  # Estimated by lambda-returns
             adv = torch.tensor(advantage[idx]).float().to(self.device)  # Estimated by generalized advantage estimation
-            new_p = self.actor.compute_proba(s, a)
+            new_p, distr = self.actor.compute_proba(s, a)
             ratios = torch.exp(torch.log(new_p + 1e-10) - torch.log(op + 1e-10))
             surr1 = ratios * adv
             surr2 = torch.clamp(ratios, 1 - self.clip, 1 + self.clip) * adv
             actor_loss = (-torch.min(surr1, surr2)).mean()
             critic_loss = F.smooth_l1_loss(self.critic.get_value(s).flatten(), v)
             self.actor_optim.zero_grad()
-            actor_loss.backward(retain_graph=True)
-            self.actor_optim.step()
-
             self.critic_optim.zero_grad()
-            critic_loss.backward()
+            total_loss = actor_loss + critic_loss + ENTROPY_COEF * distr.entropy()
+            total_loss.backward()
+            self.actor_optim.step()
             self.critic_optim.step()
 
     def get_value(self, state):
