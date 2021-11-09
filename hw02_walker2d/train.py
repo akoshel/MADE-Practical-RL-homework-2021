@@ -65,8 +65,9 @@ class Actor(nn.Module):
         # Returns probability of action according to current policy and distribution of actions
         mu, log_sigma = torch.chunk(self.model(state), 2, dim=-1)
         sigma = torch.exp(log_sigma)
-        dist = Normal(mu, sigma)
-        return dist.log_prob(action).sum(-1)
+        distr = Normal(mu, sigma)
+        prob = torch.exp(distr.log_prob(action).sum(-1))
+        return prob
 
     def act(self, state):
         # Returns an action (with tanh), not-transformed action (without tanh) and distribution of non-transformed actions
@@ -121,7 +122,8 @@ class PPO:
                 self.device)  # Probability of the action in state s.t. old policy
             v = torch.tensor(target_value[idx]).float().to(self.device)  # Estimated by lambda-returns
             adv = torch.tensor(advantage[idx]).float().to(self.device)  # Estimated by generalized advantage estimation
-            ratios = torch.exp(self.actor.compute_proba(s, a) - op)
+            new_p = self.actor.compute_proba(s, a)
+            ratios = torch.exp(torch.log(new_p + 1e-10) - torch.log(op + 1e-10))
             surr1 = ratios * adv
             surr2 = torch.clamp(ratios, 1 - self.clip, 1 + self.clip) * adv
             actor_loss = (-torch.min(surr1, surr2)).mean()
