@@ -1,7 +1,11 @@
 import random
+
 import numpy as np
-import os
 import torch
+
+random.seed(99)
+torch.manual_seed(99)
+np.random.seed(99)
 
 
 class Agent:
