@@ -1,13 +1,11 @@
-import pybullet_envs
 # Don't forget to install PyBullet!
-from gym import make
 import numpy as np
 import torch
+from gym import make
 from torch import nn
 from torch.distributions import Normal
 from torch.nn import functional as F
 from torch.optim import Adam
-import random
 
 ENV_NAME = "Walker2DBulletEnv-v0"
 
@@ -61,7 +59,7 @@ class Actor(nn.Module):
 
     def compute_proba(self, state, action):
         # Returns probability of action according to current policy and distribution of actions
-        mu =  self.model(state)
+        mu = self.model(state)
         sigma = torch.exp(self.sigma)
         distr = Normal(mu, sigma)
         prob = torch.exp(distr.log_prob(action).sum(-1))
@@ -127,11 +125,12 @@ class PPO:
             surr2 = torch.clamp(ratios, 1 - self.clip, 1 + self.clip) * adv
             actor_loss = (-torch.min(surr1, surr2)).mean()
             critic_loss = F.smooth_l1_loss(self.critic.get_value(s).flatten(), v)
+            actor_loss -= ENTROPY_COEF * distr.entropy().mean()
             self.actor_optim.zero_grad()
-            self.critic_optim.zero_grad()
-            total_loss = actor_loss + critic_loss + ENTROPY_COEF * distr.entropy().mean()
-            total_loss.backward()
+            actor_loss.backward()
             self.actor_optim.step()
+            self.critic_optim.zero_grad()
+            critic_loss.backward()
             self.critic_optim.step()
 
     def get_value(self, state):
