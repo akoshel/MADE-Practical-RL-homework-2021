@@ -3,7 +3,6 @@ import random
 from collections import deque
 
 import numpy as np
-import pybullet_envs
 import torch
 from gym import make
 from torch import nn
@@ -18,7 +17,6 @@ DEVICE = "cuda"
 BATCH_SIZE = 128
 ENV_NAME = "AntBulletEnv-v0"
 TRANSITIONS = 1000000
-
 
 
 def soft_update(target, source):
@@ -106,7 +104,6 @@ class TD3:
             self.actor_optim.zero_grad()
             actor_loss.backward()
             self.actor_optim.step()
-
 
             soft_update(self.target_critic_1, self.critic_1)
             soft_update(self.target_critic_2, self.critic_2)
