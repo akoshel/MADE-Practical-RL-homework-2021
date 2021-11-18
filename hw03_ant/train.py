@@ -3,6 +3,7 @@ import random
 from collections import deque
 
 import numpy as np
+import pybullet_envs
 import torch
 from gym import make
 from torch import nn
