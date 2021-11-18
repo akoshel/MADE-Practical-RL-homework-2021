@@ -102,6 +102,11 @@ class TD3:
             loss2.backward()
             self.critic_2_optim.step()
             # Update actor
+            actor_loss = -self.critic_1(state, self.actor(state)).mean()
+            self.actor_optim.zero_grad()
+            actor_loss.backward()
+            self.actor_optim.step()
+
 
             soft_update(self.target_critic_1, self.critic_1)
             soft_update(self.target_critic_2, self.critic_2)
