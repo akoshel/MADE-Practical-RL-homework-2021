@@ -114,6 +114,8 @@ class TD3:
 
     def save(self):
         torch.save(self.actor, "agent.pkl")
+        with open("actor.pth", "wb") as fp:
+            torch.save(self.actor.model.state_dict(), fp)
 
 
 def evaluate_policy(env, agent, episodes=5):
