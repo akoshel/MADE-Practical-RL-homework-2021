@@ -86,10 +86,10 @@ class TD3:
             reward = torch.tensor(np.array(reward), device=DEVICE, dtype=torch.float)
             done = torch.tensor(np.array(done), device=DEVICE, dtype=torch.float)
             with torch.no_grad():
-                target_action = self.target_actor(next_state)
+                target_a = self.target_actor(next_state)
                 q_target = reward + GAMMA * (1 - done) * torch.min(
-                    self.target_critics_1(next_state, target_action),
-                    self.target_critics_2(next_state, target_action)
+                    self.target_critic_1(next_state, target_a),
+                    self.target_critic_2(next_state, target_a)
                 )
             # Update critic
             loss1 = F.mse_loss(self.critic_1(state, action), q_target)
